@@ -127,7 +127,9 @@ public class ReportingController : Controller
             return File(record.Picture, "image/jpeg");
         }
 
-        return NotFound(); // No fallback or default image
+        var defaultImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/blank-picture.png");
+        var defaultImageBytes = System.IO.File.ReadAllBytes(defaultImagePath);
+        return File(defaultImageBytes, "image/png"); // No fallback or default image
     }
 
 }
