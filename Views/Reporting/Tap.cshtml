@@ -23,17 +23,7 @@
                            autofocus />
                 </div>
             </form>
-
-            @if (ViewBag.ImageUrl != null)
-            {
-                <div class="text-center mt-4 mb-3">
-                    <img src="@ViewBag.ImageUrl"
-                         alt="User Image"
-                         class="img-thumbnail"
-                         style="max-width: 200px; max-height: 200px; width: auto; height: auto; border-radius: 10px;" />
-                </div>
-            }
-
+            
             @if (ViewBag.Message != null)
             {
                 var messageType = "empty";
@@ -47,6 +37,16 @@
                 }
                 <div id="StatusAlert" class="alert alert-@messageType mt-4 text-start" role="alert">
                     @Html.Raw(ViewBag.Message)
+                </div>
+            }
+
+            @if (ViewBag.ImageUrl != null)
+            {
+                <div class="text-center mt-4 mb-3">
+                    <img src="@ViewBag.ImageUrl"
+                         alt="User Image"
+                         class="img-thumbnail"
+                         style="max-width: 200px; max-height: 200px; width: auto; height: auto; border-radius: 10px;" />
                 </div>
             }
         </div>

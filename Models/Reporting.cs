@@ -7,15 +7,6 @@ public class Reporting
     [Key]
     public string? ID { get; set; }
 
-    [DisplayName("First Name")]
-    public string? FirstName { get; set; }
-
-    [DisplayName("Last Name")]
-    public string? LastName { get; set; }
-
-    [DisplayName("Year and Section")]
-    public string? YearAndSection { get; set; }
-
     [DisplayName("BED or TED")]
     public string? Category { get; set; }
 

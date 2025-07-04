@@ -39,42 +39,6 @@ public class ReportingController : Controller
 
         ViewBag.ImageUrl = Url.Action("GetImage", "Reporting", new { id = record.ID });
 
-        string YearLevel = (record.Category ?? "").ToLower();
-        TimeSpan CutOff = new TimeSpan(15, 0, 0);
-
-        if (YearLevel == "bed")
-        {
-            if (DateTime.Now.TimeOfDay < CutOff && record.IsIn == true)
-            {
-                ViewBag.Message = "The Timeout of BED Students is at 3:00pm Onwards";
-                ViewBag.Checker = false;
-                return View();
-            }
-            else if (DateTime.Now.TimeOfDay > CutOff && record.IsIn == true)
-            {
-                record.IsIn = false;
-                record.Status = "Out";
-            }
-            else
-            {
-                record.IsIn = true;
-                record.Status = "Present";
-            }
-        }
-        else if (YearLevel == "ted")
-        {
-            if (record.IsIn == true)
-            {
-                record.IsIn = false;
-                record.Status = "Out";
-            }
-            else if (record.IsIn == false)
-            {
-                record.IsIn = true;
-                record.Status = "Present";
-            }
-        }
-        
         if (record.ID != "NULL")
         {
             if (record.IsIn == true && DateTime.Now < record.TimeIn.Value.AddMinutes(2))
@@ -107,11 +71,10 @@ public class ReportingController : Controller
         }
         else
         {
-            ViewBag.Message = $"Updated record for ID: {Display} <br>Status: {record.Status}";
+            ViewBag.Message = $"Updated record for ID: {Display} <br> Time In: {record.TimeIn}";
             return View();
         }
-        
-}
+    }
 
     [HttpGet]
     public IActionResult Tap()
@@ -131,5 +94,5 @@ public class ReportingController : Controller
         var defaultImageBytes = System.IO.File.ReadAllBytes(defaultImagePath);
         return File(defaultImageBytes, "image/png"); // No fallback or default image
     }
-
 }
+

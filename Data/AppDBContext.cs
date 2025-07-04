@@ -8,10 +8,6 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Reporting>().ToTable("Reporting");
-        modelBuilder.Entity<Reporting>().Property(r => r.FirstName).HasColumnName("FirstName");
-        modelBuilder.Entity<Reporting>().Property(r => r.LastName).HasColumnName("LastName");
-        modelBuilder.Entity<Reporting>().Property(r => r.YearAndSection).HasColumnName("YearAndSection");
         modelBuilder.Entity<Reporting>().Property(r => r.Category).HasColumnName("Category");
         modelBuilder.Entity<Reporting>().Property(r => r.TimeIn).HasColumnName("TimeIn");
         modelBuilder.Entity<Reporting>().Property(r => r.Status).HasColumnName("Status");
