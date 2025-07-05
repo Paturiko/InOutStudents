@@ -1,10 +1,4 @@
-SELECT TOP (1000) [Picture]
-      ,[ID]
-      ,[FirstName]
-      ,[LastName]
-      ,[YearAndSection]
-      ,[Category]
-      ,[TimeIn]
-      ,[Status]
-      ,[IsIn]
-  FROM [Test].[dbo].[Reporting]
+SELECT *
+FROM [SentryLocal].[dbo].[TimeLogs]
+WHERE AccessNumber = '20230270'
+ORDER BY TimeLogStamp DESC;

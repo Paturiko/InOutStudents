@@ -1,19 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using System.Data.SqlClient;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 public class ReportingController : Controller
 {
-    private readonly AppDbContext _context;
     private readonly AppDbContext _db;
 
     public ReportingController(AppDbContext db)
     {
         _db = db;
-        _context = db;
     }
 
     [HttpPost]
@@ -23,57 +19,66 @@ public class ReportingController : Controller
         if (string.IsNullOrWhiteSpace(ID))
         {
             ViewBag.Message = "Please enter an ID.";
+            ViewBag.Checker = false;
             return View();
         }
 
-        bool isDummy = false;
-
-        var record = _db.Reporting.FirstOrDefault(r => r.ID == ID);
-        if (record == null)
+        // Check if user exists
+        var user = await _db.ZkUsers.FirstOrDefaultAsync(u => u.AccessNumber == ID);
+        if (user == null)
         {
-            record = _db.Reporting.FirstOrDefault(r => r.ID == "NULL");
-
             ViewBag.Message = "Invalid ID";
             ViewBag.Checker = false;
+            return View();
         }
 
-        ViewBag.ImageUrl = Url.Action("GetImage", "Reporting", new { id = record.ID });
+        var now = DateTimeOffset.Now;
 
-        if (record.ID != "NULL")
+        // Get the most recent log
+        var recentLog = await _db.TimeLogs
+            .Where(t => t.AccessNumber == ID)
+            .OrderByDescending(t => t.TimeLogStamp)
+            .FirstOrDefaultAsync();
+
+        // Prevent repeat taps within 2 minutes
+        bool preventRepeat = recentLog != null && (now < recentLog.TimeLogStamp.AddMinutes(2));
+        if (preventRepeat)
         {
-            if (record.IsIn == true && DateTime.Now < record.TimeIn.Value.AddMinutes(2))
-            {
-                ViewBag.Message = "You cannot Tap your ID Multiple Times";
-                ViewBag.Checker = false;
-                return View();
-            }
-            else if (record.IsIn == false && DateTime.Now < record.TimeIn.Value.AddMinutes(2))
-            {
-                ViewBag.Message = "You cannot Tap your ID Multiple Times";
-                ViewBag.Checker = false;
-                return View();
-            }
+            ViewBag.Message = "You cannot Tap your ID Multiple Times.";
+            ViewBag.Checker = false;
+            return View();
         }
 
-        string Visible = Regex.Match(record.ID, "[0-9]{3}", RegexOptions.RightToLeft).Value;
-        int Length = record.ID.Length - Visible.Length;
-        string Masking = new string('*', Length);
-        string Display = Masking + Visible;
+        // Alternate log type: IN → OUT → IN ...
+        string nextLogType = recentLog != null && recentLog.LogType == "IN" ? "OUT" : "IN";
 
-        record.TimeIn = DateTime.Now;
+        var newLog = new TimeLog
+        {
+            Id = Guid.NewGuid(),
+            AccessNumber = ID,
+            TimeLogStamp = now,
+            RecordDate = DateTime.Now,
+            DateCreated = now,
+            IsDeleted = false,
+            LogType = nextLogType,
+            DeviceSerialNumber = "JHT4243000082",
+            VerifyMode = "4",
+            Location = "Drop Off",
+            Checksum = string.Empty,
+            ZkUsers = user
+        };
 
-        _db.Update(record);
+        _db.TimeLogs.Add(newLog);
         await _db.SaveChangesAsync();
-        if (record.ID == "NULL")
-        {
-            ViewBag.Message = "Invalid ID";
-            return View();
-        }
-        else
-        {
-            ViewBag.Message = $"Updated record for ID: {Display} <br> Time In: {record.TimeIn}";
-            return View();
-        }
+
+        // Mask ID for display
+        string visible = Regex.Match(ID, "[0-9]{3}", RegexOptions.RightToLeft).Value;
+        string masked = new string('*', ID.Length - visible.Length) + visible;
+
+        ViewBag.Message = $"Time {newLog.LogType} recorded for ID: {masked}<br>Timestamp: {newLog.TimeLogStamp}";
+        ViewBag.Checker = true;
+
+        return View();
     }
 
     [HttpGet]
@@ -81,18 +86,4 @@ public class ReportingController : Controller
     {
         return View();
     }
-
-    public IActionResult GetImage(string id)
-    {
-        var record = _db.Reporting.FirstOrDefault(r => r.ID == id);
-        if (record?.Picture != null)
-        {
-            return File(record.Picture, "image/jpeg");
-        }
-
-        var defaultImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images/blank-picture.png");
-        var defaultImageBytes = System.IO.File.ReadAllBytes(defaultImagePath);
-        return File(defaultImageBytes, "image/png"); // No fallback or default image
-    }
 }
-
