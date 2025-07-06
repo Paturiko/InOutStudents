@@ -1,4 +1,1 @@
-SELECT *
-FROM [SentryLocal].[dbo].[TimeLogs]
-WHERE AccessNumber = '20230270'
-ORDER BY TimeLogStamp DESC;
+
