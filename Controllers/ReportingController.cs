@@ -29,16 +29,17 @@ public async Task<IActionResult> Tap(string ID)
 
     var imagePath = Path.Combine("wwwroot", "images", imageFileName);
 
+    // Displays Default Image if no image can be found in the table
     if (System.IO.File.Exists(imagePath))
         {
             ViewBag.ImageUrl = $"/images/{imageFileName}";
         }
-    else
+        else
         {
             // fallback to default image
             ViewBag.ImageUrl = "/images/default.png";
         }
-        
+
     if (user == null)
         {
             ViewBag.Message = "Invalid ID";
@@ -48,6 +49,7 @@ public async Task<IActionResult> Tap(string ID)
 
     var now = DateTimeOffset.Now;
 
+    // Update TimeLog
     var recentLog = await _db.TimeLogs
         .Where(t => t.AccessNumber == ID)
         .OrderByDescending(t => t.TimeLogStamp)
@@ -61,7 +63,7 @@ public async Task<IActionResult> Tap(string ID)
         ViewBag.Checker = false;
         return View();
     }
-
+    // Only Display last 3 numbers
     string visible = Regex.Match(ID, "[0-9]{3}", RegexOptions.RightToLeft).Value;
     string masked = new string('*', ID.Length - visible.Length) + visible;
 
